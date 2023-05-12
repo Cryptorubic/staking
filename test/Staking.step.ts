@@ -224,6 +224,20 @@ describe('unit/Staking', () => {
         });
     });
 
+    describe('#sweep', () => {
+        it('can sweep', async () => {
+            await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
+            await context.staking.sweepTokens(
+                ethers.constants.AddressZero,
+                '0x11887Ee906de64DaA8b905B419Bfeb6DEbAfBF34',
+                BNe18(10)
+            );
+            expect(
+                await ethers.provider.getBalance('0x11887Ee906de64DaA8b905B419Bfeb6DEbAfBF34')
+            ).to.be.eq(BNe18(10));
+        });
+    });
+
     describe('rewards distribution', () => {
         it('stake ', async () => {
             await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);

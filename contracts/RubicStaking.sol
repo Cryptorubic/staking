@@ -153,6 +153,18 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         );
     }
 
+    function sweepTokens(address _asset, address _to, uint256 _amount) external onlyOwner {
+        require(_asset != address(RBC), 'cannot sweep RBC');
+
+        address sendTo = _to == address(0) ? msg.sender : _to;
+        if (_asset == address(0)) {
+            (bool success, ) = sendTo.call{ value: _amount }("");
+            require(success, 'rewards transfer failed');
+        } else {
+            IERC20Minimal(_asset).transfer(sendTo, _amount);
+        }
+    }
+
     function _stake(uint256 _amount, uint128 _lockTime) private returns (uint256 tokenId) {
         _increaseCumulative(uint128(block.timestamp));
         virtualRBCBalance += getAmountWithMultiplier(_amount, _lockTime);
