@@ -2,12 +2,11 @@
 pragma solidity ^0.8.0;
 
 interface IRubicStaking {
-    
     function enterStaking(uint256 _amount, uint128 _lockTime) external;
 
     function unstake(uint256 tokenId) external;
 
-    function claimRewards(uint256 tokenId) external returns(uint256 rewards);
+    function claimRewards(uint256 tokenId) external returns (uint256 rewards);
 
     function addRewards() external payable;
 

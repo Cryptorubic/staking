@@ -9,6 +9,7 @@ export const WALLET_USER_INDEXES = {
 
 export class ActorFixture {
     wallets: Array<Wallet>;
+
     provider: any;
 
     constructor(wallets: Array<Wallet>, provider: any) {

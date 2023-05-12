@@ -42,18 +42,18 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         _;
     }
 
-    function tokensOfOwner(address owner) external view returns(uint256[] memory) {
+    function tokensOfOwner(address owner) external view returns (uint256[] memory) {
         uint256 balance = balanceOf(owner);
         uint256[] memory ownedTokens = new uint256[](balance);
 
-        for (uint i; i < balance; i++) {
+        for (uint256 i; i < balance; i++) {
             ownedTokens[i] = tokenOfOwnerByIndex(owner, i);
         }
 
         return ownedTokens;
     }
 
-    function estimatedAnnualRewardsByTokenId(uint256 tokenId) external view returns(uint256) {
+    function estimatedAnnualRewardsByTokenId(uint256 tokenId) external view returns (uint256) {
         uint256 estimatedReward = rewardRate * 365 * 24 * 60 * 60;
         uint256 estimatedRewardGrowth = rewardGrowth + FullMath.mulDiv(estimatedReward, PRECISION, virtualRBCBalance);
 
@@ -79,7 +79,7 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         emit EmergencyStop(_emergencyStop);
     }
 
-    function addRewards() payable external override {
+    function addRewards() external payable override {
         _increaseCumulative(uint128(block.timestamp));
         if (msg.value > 0) {
             rewardReserve += msg.value;
@@ -90,7 +90,7 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
     function enterStaking(uint256 _amount, uint128 _lockTime) external override {
         require(_amount > 0, 'stake amount should be correct');
         require(!emergencyStop, 'staking is stopped');
-        
+
         TransferHelper.safeTransferFrom(address(RBC), msg.sender, address(this), _amount);
         uint256 tokenId = _stake(_amount, _lockTime);
         emit Enter(_amount, _lockTime, tokenId);
@@ -109,7 +109,7 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
 
         TransferHelper.safeTransfer(address(RBC), msg.sender, stake.amount);
 
-        (bool success, ) = msg.sender.call{ value: rewards }("");
+        (bool success, ) = msg.sender.call{value: rewards}('');
         require(success, 'rewards transfer failed');
 
         _burn(tokenId);
@@ -130,7 +130,7 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         );
         stake.lastRewardGrowth = rewardGrowth;
 
-        (bool success, ) = msg.sender.call{ value: rewards }("");
+        (bool success, ) = msg.sender.call{value: rewards}('');
         require(success, 'rewards transfer failed');
 
         emit Claim(rewards, tokenId);
@@ -153,12 +153,16 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         );
     }
 
-    function sweepTokens(address _asset, address _to, uint256 _amount) external onlyOwner {
+    function sweepTokens(
+        address _asset,
+        address _to,
+        uint256 _amount
+    ) external onlyOwner {
         require(_asset != address(RBC), 'cannot sweep RBC');
 
         address sendTo = _to == address(0) ? msg.sender : _to;
         if (_asset == address(0)) {
-            (bool success, ) = sendTo.call{ value: _amount }("");
+            (bool success, ) = sendTo.call{value: _amount}('');
             require(success, 'rewards transfer failed');
         } else {
             IERC20Minimal(_asset).transfer(sendTo, _amount);

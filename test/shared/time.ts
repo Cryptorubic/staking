@@ -3,10 +3,10 @@ import { providers } from 'ethers';
 type TimeSetterFunction = (timestamp: number) => Promise<void>;
 
 type TimeSetters = {
-    set: TimeSetterFunction
-    step: TimeSetterFunction
-    setAndMine: TimeSetterFunction
-}
+    set: TimeSetterFunction;
+    step: TimeSetterFunction;
+    setAndMine: TimeSetterFunction;
+};
 
 export const createTimeMachine = (provider: providers.JsonRpcProvider): TimeSetters => {
     return {
@@ -22,6 +22,6 @@ export const createTimeMachine = (provider: providers.JsonRpcProvider): TimeSett
         setAndMine: async (timestamp: number) => {
             await provider.send('evm_setNextBlockTimestamp', [timestamp]);
             await provider.send('evm_mine', []);
-        },
-    }
+        }
+    };
 };
