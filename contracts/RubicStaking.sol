@@ -65,12 +65,11 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         emit EmergencyStop(_emergencyStop);
     }
 
-    function addRewards(uint256 amount) external override {
+    function addRewards() payable external override {
         _increaseCumulative(uint128(block.timestamp));
-        if (amount > 0) {
-            TransferHelper.safeTransferFrom(address(RBC), msg.sender, address(this), amount);
-            rewardReserve += amount;
-            emit AddRewards(amount);
+        if (msg.value > 0) {
+            rewardReserve += msg.value;
+            emit AddRewards(msg.value);
         }
     }
 
@@ -86,11 +85,19 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
     function unstake(uint256 tokenId) external override isAuthorizedForToken(tokenId) {
         _increaseCumulative(uint128(block.timestamp));
         Stake memory stake = stakes[tokenId];
+
         require(stake.lockStartTime + stake.lockTime < block.timestamp || emergencyStop, 'lock isnt expired');
+
         uint256 amountWithMultiplier = getAmountWithMultiplier(stake.amount, stake.lockTime);
         uint256 rewards = FullMath.mulDiv(amountWithMultiplier, rewardGrowth - stake.lastRewardGrowth, PRECISION);
+
         virtualRBCBalance -= amountWithMultiplier;
-        TransferHelper.safeTransfer(address(RBC), msg.sender, stake.amount + rewards);
+
+        TransferHelper.safeTransfer(address(RBC), msg.sender, stake.amount);
+
+        (bool success, ) = msg.sender.call{ value: rewards }("");
+        require(success, 'rewards transfer failed');
+
         _burn(tokenId);
         delete stakes[tokenId];
         emit Unstake(stake.amount, tokenId);
@@ -99,14 +106,19 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
     function claimRewards(uint256 tokenId) external override isAuthorizedForToken(tokenId) returns (uint256 rewards) {
         _increaseCumulative(uint128(block.timestamp));
         Stake storage stake = stakes[tokenId];
+
         require(stake.amount > 0, 'amount should be correct');
+
         rewards = FullMath.mulDiv(
             getAmountWithMultiplier(stake.amount, stake.lockTime),
             rewardGrowth - stake.lastRewardGrowth,
             PRECISION
         );
         stake.lastRewardGrowth = rewardGrowth;
-        TransferHelper.safeTransfer(address(RBC), msg.sender, rewards);
+
+        (bool success, ) = msg.sender.call{ value: rewards }("");
+        require(success, 'rewards transfer failed');
+
         emit Claim(rewards, tokenId);
     }
 

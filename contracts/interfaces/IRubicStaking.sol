@@ -9,7 +9,7 @@ interface IRubicStaking {
 
     function claimRewards(uint256 tokenId) external returns(uint256 rewards);
 
-    function addRewards(uint256 amount) external;
+    function addRewards() external payable;
 
     function calculateRewards(uint256 tokenId) external view returns (uint256 rewards);
 
