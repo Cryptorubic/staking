@@ -348,6 +348,9 @@ describe('unit/Staking', () => {
             await context.staking.connect(user1).enterStaking(amount, lockTime);
             await context.staking.connect(user1).enterStaking(amount, lockTime);
             await context.staking.connect(user1).enterStaking(amount, lockTime);
+
+            await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
+            await context.staking.connect(deployer).setRate(BNe18(1));
         });
         it('tokens of owner', async () => {
             expect(await context.staking.tokensOfOwner(user1.address)).to.deep.eq([1, 2, 3]);
@@ -356,6 +359,13 @@ describe('unit/Staking', () => {
             await context.staking.connect(user1).transferFrom(user1.address, user2.address, 2);
             expect(await context.staking.tokensOfOwner(user1.address)).to.deep.eq([1, 3]);
             expect(await context.staking.tokensOfOwner(user2.address)).to.deep.eq([2]);
+        });
+        it('annual rewards estimate', async () => {
+            expect(await context.staking.estimatedAnnualRewardsByTokenId(1)).to.be.eq(
+                BNe18(1)
+                    .mul(365 * 24 * 60 * 60)
+                    .div(3)
+            );
         });
     });
 });

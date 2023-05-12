@@ -53,6 +53,20 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         return ownedTokens;
     }
 
+    function estimatedAnnualRewardsByTokenId(uint256 tokenId) external view returns(uint256) {
+        uint256 estimatedReward = rewardRate * 365 * 24 * 60 * 60;
+        uint256 estimatedRewardGrowth = rewardGrowth + FullMath.mulDiv(estimatedReward, PRECISION, virtualRBCBalance);
+
+        Stake memory stake = stakes[tokenId];
+        uint256 rewards = FullMath.mulDiv(
+            getAmountWithMultiplier(stake.amount, stake.lockTime),
+            estimatedRewardGrowth - stake.lastRewardGrowth,
+            PRECISION
+        );
+
+        return rewards;
+    }
+
     function setRate(uint256 rate) external override onlyOwner {
         require(rate < 10**27, 'too high rate');
         _increaseCumulative(uint128(block.timestamp));
