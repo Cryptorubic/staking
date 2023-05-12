@@ -42,6 +42,17 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         _;
     }
 
+    function tokensOfOwner(address _owner) external view returns(uint256[] memory) {
+        uint256 balance = balanceOf(_owner);
+        uint256[] memory ownedTokens = new uint256[](balance);
+
+        for (uint i; i < balance; i++) {
+            ownedTokens[i] = tokenOfOwnerByIndex(_owner, i);
+        }
+
+        return ownedTokens;
+    }
+
     function setRate(uint256 rate) external override onlyOwner {
         require(rate < 10**27, 'too high rate');
         _increaseCumulative(uint128(block.timestamp));

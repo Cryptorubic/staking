@@ -8,6 +8,7 @@ import { ActorFixture } from './shared/actors';
 import { provider } from './shared/provider';
 import { createTimeMachine } from './shared/time';
 import { expect } from 'chai';
+import { beforeEach } from 'mocha';
 
 describe('unit/Staking', () => {
     let actors: ActorFixture;
@@ -337,6 +338,24 @@ describe('unit/Staking', () => {
             await context.staking.connect(user1).claimRewards('2');
             balanceAfter = await context.RBC.balanceOf(user1.address);
             expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(200));
+        });
+    });
+
+    describe.only('view functions', () => {
+        beforeEach('setup', async () => {
+            let lockTime = 15552000; //180 days
+            let amount = BNe18(20);
+            await context.staking.connect(user1).enterStaking(amount, lockTime);
+            await context.staking.connect(user1).enterStaking(amount, lockTime);
+            await context.staking.connect(user1).enterStaking(amount, lockTime);
+        });
+        it('tokens of owner', async () => {
+            expect(await context.staking.tokensOfOwner(user1.address)).to.deep.eq([1, 2, 3]);
+        });
+        it('tokens of owner after transfer', async () => {
+            await context.staking.connect(user1).transferFrom(user1.address, user2.address, 2);
+            expect(await context.staking.tokensOfOwner(user1.address)).to.deep.eq([1, 3]);
+            expect(await context.staking.tokensOfOwner(user2.address)).to.deep.eq([2]);
         });
     });
 });
