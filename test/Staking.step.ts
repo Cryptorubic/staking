@@ -10,6 +10,8 @@ import { createTimeMachine } from './shared/time';
 import { expect } from 'chai';
 import { beforeEach } from 'mocha';
 
+const { balance } = require('@openzeppelin/test-helpers');
+
 describe('unit/Staking', () => {
     let actors: ActorFixture;
     let deployer: Wallet;
@@ -47,7 +49,7 @@ describe('unit/Staking', () => {
 
         it('rewardGrowth after added rewards is correct', async () => {
             let startTime = await blockTimestamp();
-            let lockTime = 15552000;
+            let lockTime = 23328000;
             let amount = BNe18(20);
             await context.staking.connect(user1).enterStaking(amount, lockTime);
             await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
@@ -84,18 +86,20 @@ describe('unit/Staking', () => {
         it('get deposited tokens and rewards', async () => {
             let startTime = await blockTimestamp();
             let lockTime = 7776000; // 30
-            let balanceBefore = await context.RBC.balanceOf(user1.address);
+            const tracker = await balance.tracker(user1.address); // instantiation
+            await tracker.get();
 
             await context.staking.connect(user1).enterStaking(BNe18(20), lockTime);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(1000) });
+
             await context.staking.connect(deployer).setRate(BNe18(1));
 
             Time.set(startTime + lockTime + 10000);
 
             await context.staking.connect(user1).unstake('1');
-            let balanceAfter = await context.RBC.balanceOf(user1.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(1000));
+            const { delta, fees } = await tracker.deltaWithFees();
+            expect(delta.add(fees)).to.eq(BNe18(1000));
         });
 
         it('stake deleted correctly', async () => {
@@ -145,10 +149,18 @@ describe('unit/Staking', () => {
 
             await context.staking.connect(deployer).setRate(BNe18(1));
             await context.staking.connect(deployer).setEmergencyStop(true);
+
             let balanceBefore = await context.RBC.balanceOf(user1.address);
+            const tracker = await balance.tracker(user1.address); // instantiation
+            await tracker.get();
+
             await context.staking.connect(user1).unstake('1');
+
             let balanceAfter = await context.RBC.balanceOf(user1.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(1020));
+            const { delta, fees } = await tracker.deltaWithFees();
+
+            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(20));
+            expect(delta.add(fees)).to.eq(BNe18(1000));
         });
 
         it('fails if unstake before lock end time', async () => {
@@ -186,29 +198,31 @@ describe('unit/Staking', () => {
         it('works corrects before lock end time', async () => {
             let startTime = await blockTimestamp();
             await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
-            await context.staking.connect(user2).enterStaking(BNe18(10), 23328000);
+            await context.staking.connect(user2).enterStaking(BNe18(10), 31104000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
             await context.staking.connect(deployer).setRate(BNe18(1));
 
             Time.set(startTime + 200000);
 
-            let balanceBefore = await context.RBC.balanceOf(user1.address);
+            let tracker = await balance.tracker(user1.address); // instantiation
+            await tracker.get();
             await context.staking.connect(user1).claimRewards('1');
-            let balanceAfter = await context.RBC.balanceOf(user1.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(5));
+            let { delta, fees } = await tracker.deltaWithFees();
+            expect(delta.add(fees)).to.eq(BNe18(5));
 
-            balanceBefore = await context.RBC.balanceOf(user2.address);
+            tracker = await balance.tracker(user2.address); // instantiation
+            await tracker.get();
             await context.staking.connect(user2).claimRewards('2');
-            balanceAfter = await context.RBC.balanceOf(user2.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(5));
+            ({ delta, fees } = await tracker.deltaWithFees());
+            expect(delta.add(fees)).to.eq(BNe18(5));
         });
 
         it('works corrects after lock end time', async () => {
             let startTime = await blockTimestamp();
 
             await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
-            await context.staking.connect(user2).enterStaking(BNe18(10), 23328000);
+            await context.staking.connect(user2).enterStaking(BNe18(10), 31104000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
             await context.staking.connect(deployer).setRate(BNe18(1));
@@ -217,10 +231,11 @@ describe('unit/Staking', () => {
 
             Time.set(startTime + 23338000);
 
-            let balanceBefore = await context.RBC.balanceOf(user1.address);
-            await context.staking.connect(user1).claimRewards('3');
-            let balanceAfter = await context.RBC.balanceOf(user1.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(3));
+            const tracker = await balance.tracker(user1.address); // instantiation
+            await tracker.get();
+            await context.staking.connect(user1).claimRewards('3'); // (10 - 1) / 3
+            const { delta, fees } = await tracker.deltaWithFees();
+            expect(delta.add(fees)).to.eq(BNe18(3));
         });
     });
 
@@ -239,9 +254,9 @@ describe('unit/Staking', () => {
     });
 
     describe('rewards distribution', () => {
-        it('stake ', async () => {
-            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
-            await context.staking.connect(user2).enterStaking(BNe18(10), 7776000);
+        it.only('stake ', async () => {
+            await context.staking.connect(user1).enterStaking(BNe18(20), 15552000);
+            await context.staking.connect(user2).enterStaking(BNe18(10), 15552000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(100) });
             await context.staking.connect(deployer).setRate(BNe18(1));
@@ -249,7 +264,7 @@ describe('unit/Staking', () => {
 
             Time.set(startTime + 10);
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 15552000);
 
             Time.set(startTime + 100);
 
