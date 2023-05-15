@@ -254,8 +254,8 @@ describe('unit/Staking', () => {
     });
 
     describe('rewards distribution', () => {
-        it.only('stake ', async () => {
-            await context.staking.connect(user1).enterStaking(BNe18(20), 15552000);
+        it('stake ', async () => {
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
             await context.staking.connect(user2).enterStaking(BNe18(10), 15552000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(100) });
@@ -264,7 +264,7 @@ describe('unit/Staking', () => {
 
             Time.set(startTime + 10);
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 15552000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
 
             Time.set(startTime + 100);
 
@@ -276,13 +276,12 @@ describe('unit/Staking', () => {
         });
 
         it('is correct', async () => {
-            let startTime = await blockTimestamp();
-
             await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
-            await context.staking.connect(user2).enterStaking(BNe18(10), 7776000);
+            await context.staking.connect(user2).enterStaking(BNe18(10), 15552000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(100) });
             await context.staking.connect(deployer).setRate(BNe18(1));
+            let startTime = await blockTimestamp();
 
             Time.set(startTime + 200);
 
@@ -295,29 +294,23 @@ describe('unit/Staking', () => {
 
             await context.RBC.connect(user1).transfer(user2.address, BNe18(1));
 
-            // let balanceBefore = await context.RBC.balanceOf(user1.address);
-            // await context.staking.connect(user1).unstake("3");
-            // let balanceAfter = await context.RBC.balanceOf(user1.address);
-            // expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(5));
-
             expect(await context.staking.calculateRewards('1')).to.eq('89423076923076923076');
             expect(await context.staking.calculateRewards('2')).to.eq('53653846153846153846');
             expect(await context.staking.calculateRewards('3')).to.eq('26923076923076923076');
         });
 
         it('is correct', async () => {
-            let startTime = await blockTimestamp();
-
             await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
-            await context.staking.connect(user2).enterStaking(BNe18(10), 7776000);
+            await context.staking.connect(user2).enterStaking(BNe18(10), 15552000);
 
             await context.staking.connect(deployer).setRate(BNe18(1));
             await context.staking.connect(deployer).addRewards({ value: BNe18(100) });
             await context.staking.connect(deployer).addRewards({ value: BNe18(100) });
+            let startTime = await blockTimestamp();
 
-            Time.set(startTime + 7777000);
-
-            await context.RBC.connect(user1).transfer(user2.address, BNe18(1));
+            Time.set(startTime + 15552000);
+            //
+            // await context.RBC.connect(user1).transfer(user2.address, BNe18(1));
 
             await context.staking.connect(user1).unstake('1');
             await context.staking.connect(user2).unstake('2');
@@ -327,13 +320,17 @@ describe('unit/Staking', () => {
 
             await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
 
+            startTime = await blockTimestamp();
+
             Time.set(startTime + 7778000);
 
             await context.staking.connect(user2).enterStaking(BNe18(20), 7776000);
-            let balanceBefore = await context.RBC.balanceOf(user1.address);
+
+            let tracker = await balance.tracker(user1.address); // instantiation
+            await tracker.get();
             await context.staking.connect(user1).claimRewards('3');
-            let balanceAfter = await context.RBC.balanceOf(user1.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(400));
+            let { delta, fees } = await tracker.deltaWithFees();
+            expect(delta.add(fees)).to.eq(BNe18(400));
         });
 
         it('is correct', async () => {
@@ -352,10 +349,11 @@ describe('unit/Staking', () => {
 
             Time.set(startTime + 403);
 
-            let balanceBefore = await context.RBC.balanceOf(user1.address);
+            let tracker = await balance.tracker(user1.address); // instantiation
+            await tracker.get();
             await context.staking.connect(user1).claimRewards('1');
-            let balanceAfter = await context.RBC.balanceOf(user1.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(300));
+            let { delta, fees } = await tracker.deltaWithFees();
+            expect(delta.add(fees)).to.eq(BNe18(300));
 
             await context.staking.connect(user1).enterStaking(BNe18(20), 23328000);
 
@@ -363,10 +361,11 @@ describe('unit/Staking', () => {
 
             Time.set(startTime + 1200);
 
-            balanceBefore = await context.RBC.balanceOf(user1.address);
+            tracker = await balance.tracker(user1.address);
+            await tracker.get();
             await context.staking.connect(user1).claimRewards('2');
-            balanceAfter = await context.RBC.balanceOf(user1.address);
-            expect(balanceAfter.sub(balanceBefore)).to.eq(BNe18(200));
+            ({ delta, fees } = await tracker.deltaWithFees());
+            expect(delta.add(fees)).to.eq(BNe18(180));
         });
     });
 
