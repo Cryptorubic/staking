@@ -83,7 +83,7 @@ describe('unit/Staking', () => {
     describe('#unstake', () => {
         it('get deposited tokens and rewards', async () => {
             let startTime = await blockTimestamp();
-            let lockTime = 2592000; // 30
+            let lockTime = 7776000; // 30
             let balanceBefore = await context.RBC.balanceOf(user1.address);
 
             await context.staking.connect(user1).enterStaking(BNe18(20), lockTime);
@@ -100,7 +100,7 @@ describe('unit/Staking', () => {
 
         it('stake deleted correctly', async () => {
             let startTime = await blockTimestamp();
-            let lockTime = 2592000;
+            let lockTime = 7776000;
             await context.staking.connect(user1).enterStaking(BNe18(20), lockTime);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
@@ -117,7 +117,7 @@ describe('unit/Staking', () => {
 
         it('work correct after emergencyStop', async () => {
             let startTime = await blockTimestamp();
-            let lockTime = 2592000; // 30
+            let lockTime = 7776000; // 30
 
             await context.staking.connect(user1).enterStaking(BNe18(20), lockTime);
 
@@ -134,7 +134,7 @@ describe('unit/Staking', () => {
 
         it('work correct after emergencyStop(_increaseCumulative before)', async () => {
             let startTime = await blockTimestamp();
-            let lockTime = 2592000; // 30
+            let lockTime = 7776000; // 30
 
             await context.staking.connect(user1).enterStaking(BNe18(20), lockTime);
 
@@ -185,7 +185,7 @@ describe('unit/Staking', () => {
     describe('#claimRewards', () => {
         it('works corrects before lock end time', async () => {
             let startTime = await blockTimestamp();
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
             await context.staking.connect(user2).enterStaking(BNe18(10), 23328000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
@@ -207,13 +207,13 @@ describe('unit/Staking', () => {
         it('works corrects after lock end time', async () => {
             let startTime = await blockTimestamp();
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
             await context.staking.connect(user2).enterStaking(BNe18(10), 23328000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
             await context.staking.connect(deployer).setRate(BNe18(1));
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
 
             Time.set(startTime + 23338000);
 
@@ -240,7 +240,7 @@ describe('unit/Staking', () => {
 
     describe('rewards distribution', () => {
         it('stake ', async () => {
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
             await context.staking.connect(user2).enterStaking(BNe18(10), 7776000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(100) });
@@ -249,7 +249,7 @@ describe('unit/Staking', () => {
 
             Time.set(startTime + 10);
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
 
             Time.set(startTime + 100);
 
@@ -263,7 +263,7 @@ describe('unit/Staking', () => {
         it('is correct', async () => {
             let startTime = await blockTimestamp();
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
             await context.staking.connect(user2).enterStaking(BNe18(10), 7776000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(100) });
@@ -271,7 +271,7 @@ describe('unit/Staking', () => {
 
             Time.set(startTime + 200);
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
 
             await context.staking.connect(deployer).addRewards({ value: BNe18(70) });
             await context.staking.connect(deployer).setRate(BNe18(2));
@@ -293,7 +293,7 @@ describe('unit/Staking', () => {
         it('is correct', async () => {
             let startTime = await blockTimestamp();
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
             await context.staking.connect(user2).enterStaking(BNe18(10), 7776000);
 
             await context.staking.connect(deployer).setRate(BNe18(1));
@@ -310,11 +310,11 @@ describe('unit/Staking', () => {
             await context.staking.connect(deployer).addRewards({ value: BNe18(200) });
             await context.staking.connect(deployer).addRewards({ value: BNe18(200) });
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
 
             Time.set(startTime + 7778000);
 
-            await context.staking.connect(user2).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user2).enterStaking(BNe18(20), 7776000);
             let balanceBefore = await context.RBC.balanceOf(user1.address);
             await context.staking.connect(user1).claimRewards('3');
             let balanceAfter = await context.RBC.balanceOf(user1.address);
@@ -324,7 +324,7 @@ describe('unit/Staking', () => {
         it('is correct', async () => {
             await context.staking.connect(deployer).addRewards({ value: BNe18(300) });
 
-            await context.staking.connect(user1).enterStaking(BNe18(20), 2592000);
+            await context.staking.connect(user1).enterStaking(BNe18(20), 7776000);
 
             await context.staking.connect(deployer).setRate(BNe18(1));
             let startTime = await blockTimestamp();
