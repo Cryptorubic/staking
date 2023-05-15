@@ -22,6 +22,7 @@
     "hardhat-contract-sizer": "^2.6.1"
   },
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.16",
     "@types/mocha": "^9.1.1",
     "@typescript-eslint/eslint-plugin": "^5.36.1",
     "@typescript-eslint/parser": "^5.36.1",
