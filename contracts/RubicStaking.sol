@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
 import './interfaces/IRubicStaking.sol';
@@ -11,7 +12,7 @@ import './libraries/TransferHelper.sol';
 import './libraries/FullMath.sol';
 import './libraries/Multicall.sol';
 
-contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
+contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, ReentrancyGuard, Ownable {
     struct Stake {
         uint128 lockTime;
         uint128 lockStartTime;
@@ -96,7 +97,7 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         emit Enter(_amount, _lockTime, tokenId);
     }
 
-    function unstake(uint256 tokenId) external override isAuthorizedForToken(tokenId) {
+    function unstake(uint256 tokenId) external override nonReentrant isAuthorizedForToken(tokenId) {
         _increaseCumulative(uint128(block.timestamp));
         Stake memory stake = stakes[tokenId];
 
@@ -117,7 +118,7 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, Ownable {
         emit Unstake(stake.amount, tokenId);
     }
 
-    function claimRewards(uint256 tokenId) external override isAuthorizedForToken(tokenId) returns (uint256 rewards) {
+    function claimRewards(uint256 tokenId) external override nonReentrant isAuthorizedForToken(tokenId) returns (uint256 rewards) {
         _increaseCumulative(uint128(block.timestamp));
         Stake storage stake = stakes[tokenId];
 
