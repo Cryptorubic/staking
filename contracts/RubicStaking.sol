@@ -10,9 +10,8 @@ import './interfaces/IERC20Minimal.sol';
 
 import './libraries/TransferHelper.sol';
 import './libraries/FullMath.sol';
-import './libraries/Multicall.sol';
 
-contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, ReentrancyGuard, Ownable {
+contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownable {
     struct Stake {
         uint128 lockTime;
         uint128 lockStartTime;
