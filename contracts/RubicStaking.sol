@@ -162,6 +162,10 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
 
         address sendTo = _to == address(0) ? msg.sender : _to;
         if (_asset == address(0)) {
+            if (!emergencyStop) _increaseCumulative(uint128(block.timestamp));
+
+            rewardReserve -= _amount;
+
             (bool success, ) = sendTo.call{value: _amount}('');
             require(success, 'rewards transfer failed');
         } else {
