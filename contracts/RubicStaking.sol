@@ -10,9 +10,8 @@ import './interfaces/IERC20Minimal.sol';
 
 import './libraries/TransferHelper.sol';
 import './libraries/FullMath.sol';
-import './libraries/Multicall.sol';
 
-contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, ReentrancyGuard, Ownable {
+contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownable {
     struct Stake {
         uint128 lockTime;
         uint128 lockStartTime;
@@ -163,6 +162,10 @@ contract RubicStaking is IRubicStaking, Multicall, ERC721Enumerable, ReentrancyG
 
         address sendTo = _to == address(0) ? msg.sender : _to;
         if (_asset == address(0)) {
+            _increaseCumulative(uint128(block.timestamp));
+
+            rewardReserve -= _amount;
+
             (bool success, ) = sendTo.call{value: _amount}('');
             require(success, 'rewards transfer failed');
         } else {

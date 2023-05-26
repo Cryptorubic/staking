@@ -251,6 +251,15 @@ describe('unit/Staking', () => {
                 await ethers.provider.getBalance('0x11887Ee906de64DaA8b905B419Bfeb6DEbAfBF34')
             ).to.be.eq(BNe18(10));
         });
+        it('reward reserve after sweep of native is decreased', async () => {
+            await context.staking.connect(deployer).addRewards({ value: BNe18(10) });
+            await context.staking.sweepTokens(
+                ethers.constants.AddressZero,
+                '0x11887Ee906de64DaA8b905B419Bfeb6DEbAfBF34',
+                BNe18(6)
+            );
+            expect(await context.staking.rewardReserve()).to.be.eq(BNe18(4));
+        });
     });
 
     describe('rewards distribution', () => {
