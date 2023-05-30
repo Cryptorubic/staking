@@ -29,8 +29,9 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
 
     uint256 public virtualRBCBalance;
     uint256 public rewardGrowth = 1;
+    bool public emergencyStop;
+
     uint256 private _tokenId = 1;
-    bool private emergencyStop;
 
     constructor(address _RBC) ERC721('Rubic Staking NFT', 'RBC-STAKE') {
         RBC = IERC20Minimal(_RBC);
