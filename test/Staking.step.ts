@@ -47,6 +47,16 @@ describe('unit/Staking', () => {
             expect(stake.lastRewardGrowth).to.eq(1);
         });
 
+        it('stake to another address', async () => {
+            let lockTime = 15552000; //180 days
+            let amount = BNe18(20);
+            await context.staking.connect(user1).enterStakingTo(amount, lockTime, user2.address);
+
+            expect(await context.RBC.balanceOf(context.staking.address)).to.eq(amount);
+            expect(await context.staking.balanceOf(user2.address)).to.be.eq(1);
+            expect(await context.staking.tokensOfOwner(user2.address)).to.be.deep.eq(['1']);
+        });
+
         it('rewardGrowth after added rewards is correct', async () => {
             let startTime = await blockTimestamp();
             let lockTime = 23328000;

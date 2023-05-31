@@ -93,7 +93,17 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
         require(!emergencyStop, 'staking is stopped');
 
         TransferHelper.safeTransferFrom(address(RBC), msg.sender, address(this), _amount);
-        uint256 tokenId = _stake(_amount, _lockTime);
+        uint256 tokenId = _stake(_amount, _lockTime, msg.sender);
+        emit Enter(_amount, _lockTime, tokenId);
+    }
+
+    function enterStakingTo(uint256 _amount, uint128 _lockTime, address _to) external override {
+        require(_amount > 0, 'stake amount should be correct');
+        require(_to != address(0), 'to is zero');
+        require(!emergencyStop, 'staking is stopped');
+
+        TransferHelper.safeTransferFrom(address(RBC), msg.sender, address(this), _amount);
+        uint256 tokenId = _stake(_amount, _lockTime, _to);
         emit Enter(_amount, _lockTime, tokenId);
     }
 
@@ -174,7 +184,7 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
         }
     }
 
-    function _stake(uint256 _amount, uint128 _lockTime) private returns (uint256 tokenId) {
+    function _stake(uint256 _amount, uint128 _lockTime, address _to) private returns (uint256 tokenId) {
         _increaseCumulative(uint128(block.timestamp));
         virtualRBCBalance += getAmountWithMultiplier(_amount, _lockTime);
         tokenId = _tokenId++;
@@ -184,7 +194,8 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
             amount: _amount,
             lastRewardGrowth: rewardGrowth
         });
-        _mint(msg.sender, tokenId);
+
+        _mint(_to, tokenId);
     }
 
     function _increaseCumulative(uint128 currentTimestamp) private {
