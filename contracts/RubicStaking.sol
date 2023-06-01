@@ -214,6 +214,7 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
     }
 
     function getAmountWithMultiplier(uint256 amount, uint128 lockTime) private pure returns (uint256) {
+        if (lockTime == 30 days) return (10 * amount) / 10;
         if (lockTime == 90 days) return (10 * amount) / 10;
         if (lockTime == 180 days) return (12 * amount) / 10;
         if (lockTime == 270 days) return (15 * amount) / 10;
