@@ -2,10 +2,10 @@ const hre = require('hardhat');
 import { RubicStaking } from '../typechain';
 
 async function main() {
+    const constructorArguments = ['0x10aaed289a7b1b0155bf4b86c862f297e84465e0'];
+
     const factory = await hre.ethers.getContractFactory('RubicStaking');
-    const contract = (await factory.deploy(
-        '0x11887Ee906de64DaA8b905B419Bfeb6DEbAfBF34'
-    )) as RubicStaking;
+    const contract = (await factory.deploy(...constructorArguments)) as RubicStaking;
 
     await contract.deployed();
 
@@ -15,7 +15,7 @@ async function main() {
 
     await hre.run('verify:verify', {
         address: contract.address,
-        constructorArguments: ['0x11887Ee906de64DaA8b905B419Bfeb6DEbAfBF34']
+        constructorArguments
     });
 }
 
