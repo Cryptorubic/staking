@@ -52,9 +52,9 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
 
         Stake memory stake = stakes[tokenId];
 
-        if (stake.amount >= 10) {
+        if (stake.amount >= 10 ether) {
             return uriWhale;
-        } else if (stake.amount >= 5) {
+        } else if (stake.amount >= 5 ether) {
             return uriCubic;
         } else {
             return uriRubican;
