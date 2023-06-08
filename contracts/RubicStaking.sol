@@ -33,6 +33,10 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
 
     uint256 private _tokenId = 1;
 
+    string constant private uriRubican = 'https://raw.githubusercontent.com/Cryptorubic/NFT-metadata/develop/metadatas/rubican.json';
+    string constant private uriCubic = 'https://raw.githubusercontent.com/Cryptorubic/NFT-metadata/develop/metadatas/cubic.json';
+    string constant private uriWhale = 'https://raw.githubusercontent.com/Cryptorubic/NFT-metadata/develop/metadatas/whale.json';
+
     constructor(address _RBC) ERC721('Rubic Staking NFT', 'RBC-STAKE') {
         RBC = IERC20Minimal(_RBC);
         prevTimestamp = uint128(block.timestamp);
@@ -41,6 +45,20 @@ contract RubicStaking is IRubicStaking, ERC721Enumerable, ReentrancyGuard, Ownab
     modifier isAuthorizedForToken(uint256 tokenId) {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not authorized');
         _;
+    }
+
+     function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        _requireMinted(tokenId);
+
+        Stake memory stake = stakes[tokenId];
+
+        if (stake.amount >= 10 ether) {
+            return uriWhale;
+        } else if (stake.amount >= 5 ether) {
+            return uriCubic;
+        } else {
+            return uriRubican;
+        }
     }
 
     function tokensOfOwner(address owner) external view returns (uint256[] memory) {
